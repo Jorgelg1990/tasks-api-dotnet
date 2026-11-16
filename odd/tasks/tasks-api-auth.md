@@ -33,7 +33,7 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 | T9 | S8, S11 | inline (riesgo alto; verificación independiente en T13) | completada | commit T9: /refresh con rotación y detección de reutilización, /logout; 4/4 tests existentes en verde |
 | T10 | S10 | inline | completada | commit T10: [Authorize] en /api/tasks, UserId desde token, filtro por usuario y 404 en acceso ajeno; 4 tests existentes adaptados y en verde |
 | T11 | S9 | inline | completada | commit T11: Swagger UI con esquema Bearer/Authorize y respuestas documentadas; 4/4 tests en verde |
-| T12 | S12 | inline | pendiente | — |
+| T12 | S12 | inline | completada | commit T12: GlobalExceptionHandler con ProblemDetails; 409 en email duplicado y 401 genérico ya aplicados; 4/4 tests |
 | T13 | S13 | inline + verificador independiente (riesgo alto) | pendiente | — |
 | T14 | S13 | inline | pendiente | — |
 
@@ -48,3 +48,4 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 - **L7 (T9):** Se agregaron `/api/auth/refresh` (rotación: revoca el usado, emite nuevo par) y `/api/auth/logout`. Si se reutiliza un refresh revocado se revocan todos los tokens del usuario. Hash SHA-256 en base. T9 se implementó inline con verificación independiente diferida a T13.
 - **L8 (T10):** `/api/tasks` requiere JWT; `UserId` se toma del claim del token y las consultas se filtran por usuario. Acceso a tarea ajena devuelve 404. Se adaptaron los 4 tests existentes para autenticarse (registro/login por test). Prueba específica de aislamiento A/B pendiente para T13. Tests: 4/4.
 - **L9 (T11):** Swagger UI configurado con esquema Bearer (botón Authorize) y atributos de respuesta en controladores de auth y tareas. Tests: 4/4.
+- **L10 (T12):** Se agregó `GlobalExceptionHandler` para respuestas ProblemDetails uniformes. Registro devuelve 409 en email duplicado y login 401 sin revelar existencia del correo. Tests: 4/4.
