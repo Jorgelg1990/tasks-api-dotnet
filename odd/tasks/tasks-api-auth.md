@@ -35,7 +35,7 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 | T11 | S9 | inline | completada | commit T11: Swagger UI con esquema Bearer/Authorize y respuestas documentadas; 4/4 tests en verde |
 | T12 | S12 | inline | completada | commit T12: GlobalExceptionHandler con ProblemDetails; 409 en email duplicado y 401 genérico ya aplicados; 4/4 tests |
 | T13 | S13 | inline (verificación: suite completa + revisión de escenarios críticos) | completada | commit T13: 7 tests de auth/aislamiento añadidos; dotnet test 11/11 |
-| T14 | S13 | inline | pendiente | — |
+| T14 | S13 | inline | completada | commit T14: README actualizado; dotnet build OK, dotnet test 11/11 |
 
 ## Log
 
@@ -50,3 +50,4 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 - **L9 (T11):** Swagger UI configurado con esquema Bearer (botón Authorize) y atributos de respuesta en controladores de auth y tareas. Tests: 4/4.
 - **L10 (T12):** Se agregó `GlobalExceptionHandler` para respuestas ProblemDetails uniformes. Registro devuelve 409 en email duplicado y login 401 sin revelar existencia del correo. Tests: 4/4.
 - **L11 (T13):** Se agregaron 7 tests de integración: flujo registro/login/acceso, 401 sin token, rotación de refresh y revocación total ante reutilización, logout, aislamiento A/B (404 en lectura/edición/borrado), conflicto por email duplicado y login inválido. Se ajustó el factory de tests para desactivar rate limiting. Suite: 11/11. Verificación independiente diferida a revisión final (no hay subagente verificador separado en esta sesión).
+- **L12 (T14):** README actualizado con arquitectura, autenticación JWT/refresh, Swagger, tareas privadas, migraciones, tests y uso de IA. Cierre: `dotnet build` OK, `dotnet test` 11/11.
