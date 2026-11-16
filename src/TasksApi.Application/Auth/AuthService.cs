@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
 using TasksApi.Application.Common;
 using TasksApi.Domain.Entities;
@@ -44,6 +45,70 @@ public class AuthService(
         return ServiceResult<AuthResponseDto>.Success(auth);
     }
 
+    public async Task<ServiceResult<AuthResponseDto>> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return ServiceResult<AuthResponseDto>.NotFound("Token de actualización inválido.");
+
+        var hash = ComputeHash(refreshToken);
+        var stored = await refreshTokenStore.FindByHashAsync(hash, cancellationToken);
+        if (stored is null)
+            return ServiceResult<AuthResponseDto>.NotFound("Token de actualización inválido.");
+
+        if (stored.IsRevoked)
+        {
+            await refreshTokenStore.RevokeAllForUserAsync(stored.UserId, cancellationToken);
+            return ServiceResult<AuthResponseDto>.NotFound("Token de actualización inválido.");
+        }
+
+        if (stored.ExpiresAt <= DateTime.UtcNow)
+            return ServiceResult<AuthResponseDto>.NotFound("Token de actualización inválido.");
+
+        var user = await userManager.FindByIdAsync(stored.UserId);
+        if (user is null)
+            return ServiceResult<AuthResponseDto>.NotFound("Token de actualización inválido.");
+
+        var (access, accessExp) = tokenService.CreateAccessToken(user);
+        var (newRefresh, newHash, newExp) = tokenService.CreateRefreshToken();
+
+        await refreshTokenStore.RevokeAsync(stored, newHash, cancellationToken);
+        await refreshTokenStore.StoreAsync(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TokenHash = newHash,
+            ExpiresAt = newExp
+        }, cancellationToken);
+        await refreshTokenStore.SaveChangesAsync(cancellationToken);
+
+        return ServiceResult<AuthResponseDto>.Success(new AuthResponseDto
+        {
+            AccessToken = access,
+            AccessTokenExpiresAt = accessExp,
+            RefreshToken = newRefresh,
+            RefreshTokenExpiresAt = newExp
+        });
+    }
+
+    public async Task<ServiceResult<bool>> LogoutAsync(string refreshToken, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return ServiceResult<bool>.NotFound("Token de actualización inválido.");
+
+        var hash = ComputeHash(refreshToken);
+        var stored = await refreshTokenStore.FindByHashAsync(hash, cancellationToken);
+        if (stored is null)
+            return ServiceResult<bool>.NotFound("Token de actualización inválido.");
+
+        if (!stored.IsRevoked)
+        {
+            await refreshTokenStore.RevokeAsync(stored, null, cancellationToken);
+            await refreshTokenStore.SaveChangesAsync(cancellationToken);
+        }
+
+        return ServiceResult<bool>.Success(true);
+    }
+
     public async Task<AuthResponseDto> IssueTokensAsync(ApplicationUser user, CancellationToken cancellationToken = default)
     {
         var (access, accessExp) = tokenService.CreateAccessToken(user);
@@ -56,6 +121,7 @@ public class AuthService(
             TokenHash = refreshHash,
             ExpiresAt = refreshExp
         }, cancellationToken);
+        await refreshTokenStore.SaveChangesAsync(cancellationToken);
 
         return new AuthResponseDto
         {
@@ -65,9 +131,10 @@ public class AuthService(
             RefreshTokenExpiresAt = refreshExp
         };
     }
-}
 
-public interface IRefreshTokenStore
-{
-    Task StoreAsync(RefreshToken token, CancellationToken cancellationToken = default);
+    private static string ComputeHash(string token)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+        return Convert.ToHexString(bytes);
+    }
 }

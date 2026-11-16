@@ -36,4 +36,26 @@ public class AuthController(AuthService auth) : ControllerBase
 
         return Ok(result.Value);
     }
+
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<ActionResult<AuthResponseDto>> Refresh([FromBody] RefreshRequestDto request, CancellationToken cancellationToken)
+    {
+        var result = await auth.RefreshAsync(request.RefreshToken, cancellationToken);
+        if (result.Kind != ResultKind.Success)
+            return Unauthorized(new ProblemDetails { Title = "No autorizado", Detail = "Token de actualización inválido.", Status = StatusCodes.Status401Unauthorized });
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Logout([FromBody] RefreshRequestDto request, CancellationToken cancellationToken)
+    {
+        var result = await auth.LogoutAsync(request.RefreshToken, cancellationToken);
+        if (result.Kind != ResultKind.Success)
+            return Unauthorized(new ProblemDetails { Title = "No autorizado", Detail = "Token de actualización inválido.", Status = StatusCodes.Status401Unauthorized });
+
+        return NoContent();
+    }
 }
