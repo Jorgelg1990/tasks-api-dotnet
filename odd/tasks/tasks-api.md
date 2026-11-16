@@ -28,7 +28,7 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 | T1 | S4 | inline | completada | `57f81eb` — `dotnet build`: OK; migración `InitialCreate` creada |
 | T2 | S1,S3 | inline | completada | `57f81eb` — CRUD + validaciones/HTTP en `TasksController` |
 | T3 | S2,S3 | inline | completada | `57f81eb` — filtros `estado`/`responsable` y paginación en `GET /api/tasks` |
-| T4 | S5 | inline | completada | `c6f4cf5` — `dotnet test`: 4/4 superados |
+| T4 | S5 | inline | completada | `c6f4cf5` — `dotnet test`: 11/11 superados (tests de tareas y auth) |
 | T5 | S6 | inline | completada | `57f81eb` (README) + commit de documentación final (este cambio) |
 
 ## Log
@@ -43,3 +43,4 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 - **L2 (aclaraciones usuario):** ".net 10" / "si estoy de acuerdo" (acepta carpeta `C:\Users\User\TasksApi` y SQLite por defecto).
 - **L3:** Implementación completada en rama `feat/tasks-api`. `dotnet build` OK (advertencias de vulnerabilidades en dependencias transitivas/paquetes); `dotnet test`: 4 superados, 0 fallidos.
 - **L4:** Espejo Engram `odd/tasks-api/tasks` pendiente por contexto ambiguo del servidor MCP (no aceptó `project=tasksapi` con token de recuperación); avance local preservado en `odd/tasks/tasks-api.md`.
+- **L5 (revisión previa a publicación):** `dotnet test`: 11 superados, 0 fallidos (no 4 como indica L3, que refleja el estado en ese momento). `.atl/` excluido en `.gitignore`. El espejo Engram sigue pendiente según L4.
