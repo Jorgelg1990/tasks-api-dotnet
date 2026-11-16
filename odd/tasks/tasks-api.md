@@ -1,7 +1,7 @@
 # Tasks API (.NET 10)
 
 Objetivo: Implementar una API de tareas en .NET 10 con SQLite, migraciones, validaciones, filtros, paginación, tests y README.
-Rama: `main` (inicial) / feature branch según avance. Estrategia de entrega: `ask-on-risk`. Test runner: `dotnet test`.
+Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotnet test`.
 
 ## Specs
 
@@ -25,11 +25,11 @@ Rama: `main` (inicial) / feature branch según avance. Estrategia de entrega: `a
 
 | ID | Specs | Ruta | Estado | Evidencia (commit/RED-GREEN) |
 |---|---|---|---|---|
-| T1 | S4 | inline | pendiente | - |
-| T2 | S1,S3 | inline | pendiente | - |
-| T3 | S2,S3 | inline | pendiente | - |
-| T4 | S5 | inline | pendiente | - |
-| T5 | S6 | inline | pendiente | - |
+| T1 | S4 | inline | completada | `57f81eb` — `dotnet build`: OK; migración `InitialCreate` creada |
+| T2 | S1,S3 | inline | completada | `57f81eb` — CRUD + validaciones/HTTP en `TasksController` |
+| T3 | S2,S3 | inline | completada | `57f81eb` — filtros `estado`/`responsable` y paginación en `GET /api/tasks` |
+| T4 | S5 | inline | completada | `c6f4cf5` — `dotnet test`: 4/4 superados |
+| T5 | S6 | inline | completada | `57f81eb` (README) + commit de documentación final (este cambio) |
 
 ## Log
 
@@ -41,4 +41,5 @@ Rama: `main` (inicial) / feature branch según avance. Estrategia de entrega: `a
   5. Al menos 3 tests.
   6. Un README con cómo ejecutarlo, las decisiones que tomaste, qué harías con más tiempo y cómo usaste la IA (qué le pediste, qué aceptaste y qué corregiste).
 - **L2 (aclaraciones usuario):** ".net 10" / "si estoy de acuerdo" (acepta carpeta `C:\Users\User\TasksApi` y SQLite por defecto).
-- **L3:** Inicio de implementación. Riesgo previsto bajo-medio (API nueva, sin datos existentes); se evaluará con `gentle-ai review assess` por commit de unidad de trabajo cuando corresponda.
+- **L3:** Implementación completada en rama `feat/tasks-api`. `dotnet build` OK (advertencias de vulnerabilidades en dependencias transitivas/paquetes); `dotnet test`: 4 superados, 0 fallidos.
+- **L4:** Espejo Engram `odd/tasks-api/tasks` pendiente por contexto ambiguo del servidor MCP (no aceptó `project=tasksapi` con token de recuperación); avance local preservado en `odd/tasks/tasks-api.md`.
