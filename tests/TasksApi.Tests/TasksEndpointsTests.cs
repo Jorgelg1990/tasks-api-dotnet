@@ -1,8 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using TasksApi.Dtos;
-using TaskStatus = TasksApi.Models.TaskStatus;
+using TasksApi.Application.Common;
+using TasksApi.Application.Tasks.Dtos;
+using TaskStatus = TasksApi.Domain.Enums.TaskStatus;
 
 namespace TasksApi.Tests;
 

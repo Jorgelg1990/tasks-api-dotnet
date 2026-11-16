@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using TasksApi.Models;
-using TaskStatus = TasksApi.Models.TaskStatus;
+using TasksApi.Domain.Enums;
+using TaskStatus = TasksApi.Domain.Enums.TaskStatus;
 
-namespace TasksApi.Dtos;
+namespace TasksApi.Application.Tasks.Dtos;
 
 public class TaskCreateDto
 {
@@ -52,13 +52,4 @@ public class TaskResponseDto
     public TaskStatus Estado { get; set; }
     public string Responsable { get; set; } = string.Empty;
     public DateOnly FechaLimite { get; set; }
-}
-
-public class PagedResult<T>
-{
-    public IEnumerable<T> Items { get; set; } = [];
-    public int Page { get; set; }
-    public int PageSize { get; set; }
-    public int TotalItems { get; set; }
-    public int TotalPages { get; set; }
 }

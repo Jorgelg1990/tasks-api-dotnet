@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace TasksApi.Models;
+namespace TasksApi.Domain.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TaskStatus

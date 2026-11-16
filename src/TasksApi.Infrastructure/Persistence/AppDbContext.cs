@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TasksApi.Models;
-using TaskStatus = TasksApi.Models.TaskStatus;
+using TasksApi.Domain.Entities;
+using TasksApi.Domain.Enums;
+using TaskStatus = TasksApi.Domain.Enums.TaskStatus;
 
-namespace TasksApi.Data;
+namespace TasksApi.Infrastructure.Persistence;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
