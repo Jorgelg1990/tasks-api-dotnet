@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TasksApi.Domain.Entities;
@@ -6,17 +7,20 @@ using TaskStatus = TasksApi.Domain.Enums.TaskStatus;
 
 namespace TasksApi.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
+        base.OnModelCreating(builder);
+
         var statusConverter = new ValueConverter<TaskStatus, string>(
             v => ToDbValue(v),
             v => FromDbValue(v));
 
-        modelBuilder.Entity<TaskItem>(entity =>
+        builder.Entity<TaskItem>(entity =>
         {
             entity.ToTable("Tasks");
             entity.HasKey(t => t.Id);
@@ -25,6 +29,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(t => t.Estado).HasConversion(statusConverter).IsRequired().HasMaxLength(20);
             entity.Property(t => t.Responsable).IsRequired().HasMaxLength(200);
             entity.Property(t => t.FechaLimite).IsRequired();
+            entity.Property(t => t.UserId).HasMaxLength(450);
+            entity.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(t => t.UserId);
+        });
+
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.ToTable("RefreshTokens");
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.TokenHash).IsRequired().HasMaxLength(256);
+            entity.Property(r => r.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(r => r.ExpiresAt).IsRequired();
+            entity.HasIndex(r => r.TokenHash).IsUnique();
+            entity.HasIndex(r => r.UserId);
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

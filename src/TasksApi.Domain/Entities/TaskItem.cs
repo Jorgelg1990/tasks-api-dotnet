@@ -16,4 +16,8 @@ public class TaskItem
     public string Responsable { get; set; } = string.Empty;
 
     public DateOnly FechaLimite { get; set; }
+
+    public string? UserId { get; set; }
+
+    public ApplicationUser? User { get; set; }
 }
