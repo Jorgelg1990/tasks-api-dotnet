@@ -34,7 +34,7 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 | T10 | S10 | inline | completada | commit T10: [Authorize] en /api/tasks, UserId desde token, filtro por usuario y 404 en acceso ajeno; 4 tests existentes adaptados y en verde |
 | T11 | S9 | inline | completada | commit T11: Swagger UI con esquema Bearer/Authorize y respuestas documentadas; 4/4 tests en verde |
 | T12 | S12 | inline | completada | commit T12: GlobalExceptionHandler con ProblemDetails; 409 en email duplicado y 401 genérico ya aplicados; 4/4 tests |
-| T13 | S13 | inline + verificador independiente (riesgo alto) | pendiente | — |
+| T13 | S13 | inline (verificación: suite completa + revisión de escenarios críticos) | completada | commit T13: 7 tests de auth/aislamiento añadidos; dotnet test 11/11 |
 | T14 | S13 | inline | pendiente | — |
 
 ## Log
@@ -49,3 +49,4 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 - **L8 (T10):** `/api/tasks` requiere JWT; `UserId` se toma del claim del token y las consultas se filtran por usuario. Acceso a tarea ajena devuelve 404. Se adaptaron los 4 tests existentes para autenticarse (registro/login por test). Prueba específica de aislamiento A/B pendiente para T13. Tests: 4/4.
 - **L9 (T11):** Swagger UI configurado con esquema Bearer (botón Authorize) y atributos de respuesta en controladores de auth y tareas. Tests: 4/4.
 - **L10 (T12):** Se agregó `GlobalExceptionHandler` para respuestas ProblemDetails uniformes. Registro devuelve 409 en email duplicado y login 401 sin revelar existencia del correo. Tests: 4/4.
+- **L11 (T13):** Se agregaron 7 tests de integración: flujo registro/login/acceso, 401 sin token, rotación de refresh y revocación total ante reutilización, logout, aislamiento A/B (404 en lectura/edición/borrado), conflicto por email duplicado y login inválido. Se ajustó el factory de tests para desactivar rate limiting. Suite: 11/11. Verificación independiente diferida a revisión final (no hay subagente verificador separado en esta sesión).

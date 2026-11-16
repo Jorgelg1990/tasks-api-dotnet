@@ -1,7 +1,10 @@
 using System.Data.Common;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +60,27 @@ public class TasksApiFactory : WebApplicationFactory<Program>
                     options.TokenValidationParameters.ValidIssuer = "TasksApi";
                     options.TokenValidationParameters.ValidAudience = "TasksApi.Client";
                 });
+
+            services.Configure<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>(options =>
+            {
+                options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+                options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(_ =>
+                    System.Threading.RateLimiting.RateLimitPartition.GetNoLimiter("tests"));
+            });
+            // Replace endpoint policy with no-op limiter by reconfiguring the specific endpoint metadata at runtime is hard;
+            // instead, remove the EnableRateLimiting attribute effect by making the policy resolver return no limiter.
+            // Simpler: unregister and re-register rate limiter services with a permissive "auth" policy.
+            var rlDescriptors = services.Where(d => d.ServiceType == typeof(Microsoft.Extensions.Options.IConfigureOptions<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>)
+                || d.ServiceType == typeof(Microsoft.Extensions.Options.IPostConfigureOptions<Microsoft.AspNetCore.RateLimiting.RateLimiterOptions>)).ToList();
+            foreach (var d in rlDescriptors) services.Remove(d);
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+                options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(_ =>
+                    System.Threading.RateLimiting.RateLimitPartition.GetNoLimiter("tests"));
+                options.AddPolicy("auth", _ =>
+                    System.Threading.RateLimiting.RateLimitPartition.GetNoLimiter("tests-auth"));
+            });
         });
     }
 
