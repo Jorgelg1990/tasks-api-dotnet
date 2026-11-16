@@ -13,6 +13,9 @@ namespace TasksApi.Controllers;
 public class TasksController(TaskService tasks) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<TaskResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<PagedResult<TaskResponseDto>>> GetTasks(
         [FromQuery] string? estado,
         [FromQuery] string? responsable,
@@ -31,6 +34,9 @@ public class TasksController(TaskService tasks) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TaskResponseDto>> GetTask(int id, CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
@@ -44,6 +50,9 @@ public class TasksController(TaskService tasks) : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<TaskResponseDto>> CreateTask([FromBody] TaskCreateDto dto, CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
@@ -54,6 +63,10 @@ public class TasksController(TaskService tasks) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TaskResponseDto>> UpdateTask(int id, [FromBody] TaskUpdateDto dto, CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
@@ -67,6 +80,9 @@ public class TasksController(TaskService tasks) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTask(int id, CancellationToken cancellationToken = default)
     {
         var userId = GetUserId();
