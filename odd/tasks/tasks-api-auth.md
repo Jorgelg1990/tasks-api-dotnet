@@ -29,7 +29,7 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 |---|---|---|---|---|
 | T6 | S7 | inline | completada | a10f10e: dotnet build 0 errores; dotnet test 4/4 superados (refactor sin cambio de contrato) |
 | T7 | S8, S10 | inline | completada | commit de T7: Identity, RefreshToken, TaskItem.UserId y migración AddIdentityAndRefreshTokens; 4/4 tests existentes en verde |
-| T8 | S8, S11 | inline | pendiente | — |
+| T8 | S8, S11 | inline | completada | commit T8: JWT access + refresh emisión inicial, /register, /login, validación estricta, rate limiting auth, usuario demo dev; 4/4 tests existentes en verde |
 | T9 | S8, S11 | delegado (riesgo alto: seguridad) | pendiente | — |
 | T10 | S10 | inline | pendiente | — |
 | T11 | S9 | inline | pendiente | — |
@@ -44,3 +44,4 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 - **L3:** Plan aprobado con las recomendaciones de S10 y S11. Se inicia con T6.
 - **L4 (T6):** Refactor puro, sin RED nuevo: la red de seguridad son los 4 tests de integración existentes. Trade-off aceptado: TaskStatus conserva atributos JSON en Domain para no cambiar el contrato; se documentará en el README.
 - **L5 (T7):** Se agregó `ApplicationUser`, `RefreshToken` y `TaskItem.UserId` (nullable hasta T10 para no romper el contrato actual) con migración `AddIdentityAndRefreshTokens`. Se añadieron paquetes de Identity/JWT Bearer en Infrastructure; los 4 tests existentes siguen pasando.
+- **L6 (T8):** Se implementaron `/api/auth/register` y `/api/auth/login` con JWT (issuer/audience/lifetime/firma/ClockSkew 30s) y emisión de refresh token inicial; rate limiting en endpoints de auth y seed de usuario demo en Development. Swashbuckle se actualizó a 10.1.7 por compatibilidad con .NET 10/OpenAPI 2.x (la 7.2.0 rompía los tests). Los endpoints de tareas siguen sin `[Authorize]` hasta T10.
