@@ -1,22 +1,31 @@
 # Tasks API (.NET 10)
 
-REST API for task management with Clean Architecture, JWT authentication, refresh token rotation, SQLite persistence, EF Core migrations, validation, filtering, pagination, automated tests, and Swagger UI.
+REST API for personal task management. Built with ASP.NET Core on .NET 10, with Clean Architecture, JWT authentication and refresh token rotation, SQLite persistence managed by EF Core migrations, input validation, filtering, pagination, integration tests, and Swagger UI.
+
+## Features
+
+- Create, list, get, update, and delete tasks.
+- Each task has a title, description, status, assignee (`responsable`), and due date (`fechaLimite`).
+- Status values: `pendiente`, `en curso`, `hecha`.
+- Filter by status and assignee, with pagination.
+- Tasks are private: each user only sees and manages their own tasks.
+- Consistent error responses using ProblemDetails.
 
 ## Architecture
 
-The solution is organized into layers with dependencies pointing inward:
+The solution follows Clean Architecture, with dependencies pointing inward:
 
-- `src/TasksApi.Domain`: entities and enums (`TaskItem`, `ApplicationUser`, `RefreshToken`, `TaskStatus`) with no infrastructure dependencies.
-- `src/TasksApi.Application`: use cases, DTOs, validation-oriented results, and abstractions (`ITaskRepository`, `IUnitOfWork`, `ITokenService`, `IRefreshTokenStore`).
-- `src/TasksApi.Infrastructure`: EF Core/SQLite (`AppDbContext`, migrations), Identity, JWT token service, refresh token store, repositories, and global exception handling.
-- `src/TasksApi` (API): controllers, middleware pipeline, Swagger, and composition root (`Program.cs`).
-- `tests/TasksApi.Tests`: integration tests with `WebApplicationFactory` and in-memory SQLite.
+- `src/TasksApi.Domain`: entities and enums (`TaskItem`, `ApplicationUser`, `RefreshToken`, `TaskStatus`), with no infrastructure dependencies.
+- `src/TasksApi.Application`: use cases, DTOs, service results, and abstractions (`ITaskRepository`, `IUnitOfWork`, `ITokenService`, `IRefreshTokenStore`).
+- `src/TasksApi.Infrastructure`: EF Core with SQLite (`AppDbContext`, migrations), ASP.NET Core Identity, JWT token service, refresh token store, repositories, and global exception handling.
+- `src/TasksApi`: API layer with controllers, middleware pipeline, Swagger, and the composition root (`Program.cs`).
+- `tests/TasksApi.Tests`: integration tests using `WebApplicationFactory` and in-memory SQLite.
 
 ## Requirements
 
-- .NET SDK 10.0+
+- .NET SDK 10.0 or later.
 
-## How to run
+## Getting started
 
 1. Restore and build:
 
@@ -31,71 +40,70 @@ The solution is organized into layers with dependencies pointing inward:
    dotnet run --project src/TasksApi/TasksApi.csproj
    ```
 
-   The app applies EF Core migrations automatically on startup (`Database.Migrate()`), creating/updating `tasks.db` (SQLite) in the API project execution directory.
+   On startup the app applies EF Core migrations automatically (`Database.Migrate()`), creating or updating `tasks.db` (SQLite) in the API execution directory.
 
-3. Open Swagger UI in Development:
+3. Open Swagger UI in Development at `https://localhost:<port>/swagger` (or the HTTP URL shown by `dotnet run`).
 
-   - `https://localhost:<port>/swagger` (or the HTTP URL shown by `dotnet run`)
+## Authentication
 
-### Authentication (JWT + refresh token)
-
-- `POST /api/auth/register` — register a user (201). Returns access token and refresh token.
-- `POST /api/auth/login` — login (200). Returns access token and refresh token.
-- `POST /api/auth/refresh` — rotate refresh token (200). The used refresh token is revoked and a new pair is issued.
-- `POST /api/auth/logout` — revoke refresh token (204).
+- `POST /api/auth/register`: register a user (201). Returns an access token and a refresh token.
+- `POST /api/auth/login`: log in (200). Returns an access token and a refresh token.
+- `POST /api/auth/refresh`: rotate the refresh token (200). The used token is revoked and a new pair is issued.
+- `POST /api/auth/logout`: revoke a refresh token (204).
 
 Security behavior:
-- Access tokens are short-lived JWTs (default 15 minutes) with strict validation (issuer, audience, lifetime, signature, short clock skew).
-- Refresh tokens are opaque, stored hashed in the database, rotated on use, and revoked on logout. Reusing a revoked refresh token revokes all refresh tokens for that user.
+
+- Access tokens are short-lived JWTs (15 minutes by default), validated for issuer, audience, lifetime, signature, and with a short clock skew.
+- Refresh tokens are opaque, stored hashed, rotated on every use, and revoked on logout. Reusing a revoked refresh token revokes all refresh tokens for that user.
 - `/login` and `/register` are rate-limited.
-- Login returns a generic 401 for invalid credentials and does not reveal whether the email exists. Duplicate registration returns 409.
-- In Development, a demo user is seeded for quick testing: `demo@tasks.local` / `Demo123!`.
+- Invalid credentials return a generic 401, so the response does not reveal whether an email exists. Duplicate registration returns 409.
+- In Development only, a demo user is seeded: `demo@tasks.local` / `Demo123!`.
 
-JWT configuration is read from `Jwt` settings. In Development, a local key is provided in `appsettings.Development.json` for convenience; for real environments configure `Jwt:Key` via user-secrets or environment variables (never commit production secrets).
+JWT settings are read from the `Jwt` section. The Development file includes a local key for convenience. Other environments must set `Jwt:Key` through user secrets or environment variables.
 
-### Testing with Swagger
+### Using Swagger
 
-1. Call `POST /api/auth/login` (or `/register`) and copy the `accessToken`.
-2. Click **Authorize** in Swagger UI, enter `Bearer <accessToken>`, and confirm.
-3. Call `/api/tasks` endpoints as an authenticated user.
+1. Call `POST /api/auth/login` (or `/api/auth/register`) and copy the `accessToken`.
+2. Click **Authorize**, enter `Bearer <accessToken>`, and confirm.
+3. Call the `/api/tasks` endpoints.
 
-### Tasks (private per user)
+## Tasks API
 
-All `/api/tasks` endpoints require a valid Bearer token. Tasks are private: each user can only access their own tasks. Accessing another user's task returns 404.
+All `/api/tasks` endpoints require a Bearer token.
 
-- `POST /api/tasks` — create task
-- `GET /api/tasks` — list tasks (filters and pagination)
-- `GET /api/tasks/{id}` — get task by id
-- `PUT /api/tasks/{id}` — update task
-- `DELETE /api/tasks/{id}` — delete task
+- `POST /api/tasks`: create a task.
+- `GET /api/tasks`: list tasks, with filters and pagination.
+- `GET /api/tasks/{id}`: get a task by id.
+- `PUT /api/tasks/{id}`: update a task.
+- `DELETE /api/tasks/{id}`: delete a task.
 
-Task fields: `titulo`, `descripcion`, `estado` (`"pendiente"`, `"en curso"`, `"hecha"`), `responsable`, `fechaLimite` (`YYYY-MM-DD`). The owner (`UserId`) is taken from the JWT, never from the request body.
+Task fields: `titulo`, `descripcion`, `estado` (`"pendiente"`, `"en curso"`, `"hecha"`), `responsable`, and `fechaLimite` (`YYYY-MM-DD`). The owner is taken from the JWT, never from the request body.
 
 ### Filters and pagination
 
 `GET /api/tasks?estado=pendiente&responsable=Ana&page=1&pageSize=10`
 
-- `estado`: `pendiente`, `en curso`, or `hecha`
-- `responsable`: exact value
-- `page`: >= 1 (default 1)
-- `pageSize`: 1..100 (default 10)
+- `estado`: `pendiente`, `en curso`, or `hecha`.
+- `responsable`: exact match.
+- `page`: 1 or greater (default 1).
+- `pageSize`: between 1 and 100 (default 10).
 
 Paginated response: `items`, `page`, `pageSize`, `totalItems`, `totalPages`.
 
-### HTTP status codes and errors
+### HTTP status codes
 
-- `201 Created` on create/register, `200 OK` on reads/updates/login/refresh, `204 No Content` on delete/logout.
-- `400 Bad Request` for invalid input or invalid query parameters (ProblemDetails).
-- `401 Unauthorized` for missing/invalid credentials or tokens.
-- `404 Not Found` when a task does not exist for the authenticated user.
-- `409 Conflict` for duplicate email registration.
-- Unhandled exceptions are mapped to ProblemDetails by a global exception handler.
+- `201 Created`: create and register.
+- `200 OK`: reads, updates, login, and refresh.
+- `204 No Content`: delete and logout.
+- `400 Bad Request`: invalid input or query parameters (ProblemDetails).
+- `401 Unauthorized`: missing or invalid credentials or token.
+- `404 Not Found`: the task does not exist for the authenticated user.
+- `409 Conflict`: duplicate email on registration.
+- Unhandled exceptions return ProblemDetails through the global exception handler.
 
 ## Migrations
 
-Migrations are in `src/TasksApi.Infrastructure/Persistence/Migrations/`.
-
-Useful commands:
+Migrations live in `src/TasksApi.Infrastructure/Persistence/Migrations/`.
 
 ```bash
 dotnet ef migrations add <Name> --project src/TasksApi.Infrastructure/TasksApi.Infrastructure.csproj --startup-project src/TasksApi/TasksApi.csproj -o Persistence/Migrations
@@ -104,39 +112,38 @@ dotnet ef database update --project src/TasksApi.Infrastructure/TasksApi.Infrast
 
 ## Tests
 
-Run:
-
 ```bash
 dotnet test
 ```
 
-The suite includes 11 integration tests (`WebApplicationFactory` + in-memory SQLite) covering:
-- Task CRUD, filters, pagination, validation (400), and not-found behavior.
-- Authentication flow (register/login), protected endpoint access (401 without token), refresh token rotation, reuse detection (revoked token reuse revokes all sessions), and logout.
-- Per-user task isolation (user A cannot read/edit/delete user B's task; receives 404).
-- Duplicate registration conflict (409) and invalid login credentials (401).
+The suite has 11 integration tests (`WebApplicationFactory` with in-memory SQLite) covering:
 
-## Decisions
+- Task create, get, update, delete, filters, pagination, validation (400), and not-found (404).
+- Authentication: register, login, protected endpoint access (401 without a token), refresh token rotation, reuse detection, and logout.
+- Per-user isolation: one user cannot read, update, or delete another user's task (404).
+- Duplicate registration (409) and invalid login (401).
 
-- **Clean Architecture:** separated Domain/Application/Infrastructure/API to keep business rules independent from EF Core and HTTP concerns, with abstractions implemented in Infrastructure.
-- **SQLite + EF Core + migrations:** lightweight and portable; migrations are applied on startup for easy local execution.
-- **ASP.NET Core Identity + JWT:** Identity handles user storage and password hashing; JWT provides stateless access tokens and refresh tokens are stored hashed with rotation and reuse detection.
-- **Per-user task ownership:** `UserId` is derived from the authenticated token and all task queries are scoped by owner; foreign-task access returns 404 to avoid leaking existence.
-- **Swagger (Swashbuckle):** configured with Bearer security so the evaluator can authorize and test endpoints from the UI.
-- **ProblemDetails-based errors:** consistent error responses, including global exception handling.
-- **Integration-first tests:** validate real endpoint behavior, auth, and persistence against an isolated in-memory SQLite database per factory.
+## Design decisions
+
+- **Clean Architecture:** Domain, Application, Infrastructure, and API are separated so business rules do not depend on EF Core or HTTP.
+- **SQLite with EF Core migrations:** lightweight and portable. Migrations are applied on startup for simple local execution.
+- **ASP.NET Core Identity with JWT:** Identity handles user storage and password hashing. JWTs are stateless; refresh tokens are hashed, rotated, and protected by reuse detection.
+- **Per-user ownership:** `UserId` comes from the authenticated token, and every task query is scoped to the owner. Access to another user's task returns 404 so existence is not leaked.
+- **Swagger with Bearer auth:** endpoints can be tested directly from the UI.
+- **ProblemDetails errors:** consistent error responses across the API.
+- **Integration-first tests:** they exercise real endpoints, authentication, and persistence against an isolated in-memory SQLite database per test host.
 
 ## What I would do with more time
 
-- Docker/compose and CI pipeline.
-- Structured logging, tracing/metrics, and health checks.
-- Access token revocation/blacklisting strategy and password recovery flow.
-- Cursor-based pagination and richer sorting/search.
-- More unit tests around edge cases (token expiry boundaries, concurrency) and stronger secret management for all environments.
+- Docker/Compose and a CI pipeline.
+- Structured logging, tracing, metrics, and health checks.
+- Access token revocation and a password recovery flow.
+- Cursor-based pagination and richer sorting and search.
+- Unit tests for edge cases such as token expiry boundaries and concurrency, and stronger secret management across environments.
 - OpenAPI examples and API versioning.
 
 ## How I used AI
 
-- **What I asked for:** plan and implement a professional evolution of the existing Tasks API for a technical assessment: clean architecture, JWT authentication with refresh tokens, Swagger for testing, private tasks per user, plus tests and updated documentation.
-- **What I accepted:** the layered project structure, Identity/JWT/refresh-token design, per-user task scoping, Swagger Bearer configuration, global ProblemDetails handling, and integration-test coverage for auth and isolation flows.
-- **What I corrected:** kept the task HTTP contract stable during the initial refactor and verified with existing tests before changing behavior; adapted tests to authenticate after protecting `/api/tasks`; fixed a Swashbuckle 7.2.0 incompatibility with .NET 10/OpenAPI by upgrading to a compatible Swashbuckle version; adjusted the test host configuration so JWT signing/validation keys and rate limiting behaved correctly in integration tests; and recorded progress in `odd/tasks/tasks-api-auth.md`.
+- **What I asked for:** help planning and implementing the API: clean architecture, JWT authentication with refresh tokens, Swagger for manual testing, per-user task privacy, and tests and documentation.
+- **What I accepted:** the layered structure, the Identity/JWT/refresh token design, per-user task scoping, the Swagger Bearer configuration, global ProblemDetails handling, and the integration test coverage for auth and isolation.
+- **What I corrected:** kept the task HTTP contract stable during the refactor and checked it against the existing tests before changing behavior; adapted the tests to authenticate once `/api/tasks` was protected; upgraded Swashbuckle to a version compatible with .NET 10 and OpenAPI after an incompatibility with 7.2.0; and adjusted the test host so JWT keys and rate limiting behave correctly in integration tests.
