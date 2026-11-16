@@ -6,13 +6,14 @@ namespace TasksApi.Application.Abstractions;
 public interface ITaskRepository
 {
     Task<(IReadOnlyList<TaskItem> Items, int TotalItems)> GetPagedAsync(
+        string userId,
         TaskStatus? estado,
         string? responsable,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
 
-    Task<TaskItem?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<TaskItem?> GetByIdForUserAsync(int id, string userId, CancellationToken cancellationToken = default);
 
     Task AddAsync(TaskItem task, CancellationToken cancellationToken = default);
 

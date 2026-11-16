@@ -8,13 +8,14 @@ namespace TasksApi.Infrastructure.Persistence;
 public class TaskRepository(AppDbContext db) : ITaskRepository
 {
     public async Task<(IReadOnlyList<TaskItem> Items, int TotalItems)> GetPagedAsync(
+        string userId,
         TaskStatus? estado,
         string? responsable,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        IQueryable<TaskItem> query = db.Tasks.AsNoTracking();
+        IQueryable<TaskItem> query = db.Tasks.AsNoTracking().Where(t => t.UserId == userId);
 
         if (estado is not null)
             query = query.Where(t => t.Estado == estado.Value);
@@ -32,8 +33,8 @@ public class TaskRepository(AppDbContext db) : ITaskRepository
         return (items, totalItems);
     }
 
-    public Task<TaskItem?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
-        db.Tasks.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+    public Task<TaskItem?> GetByIdForUserAsync(int id, string userId, CancellationToken cancellationToken = default) =>
+        db.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId, cancellationToken);
 
     public async Task AddAsync(TaskItem task, CancellationToken cancellationToken = default) =>
         await db.Tasks.AddAsync(task, cancellationToken);

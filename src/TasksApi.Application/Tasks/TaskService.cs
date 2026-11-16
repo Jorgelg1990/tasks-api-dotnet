@@ -9,6 +9,7 @@ namespace TasksApi.Application.Tasks;
 public class TaskService(ITaskRepository repository, IUnitOfWork unitOfWork)
 {
     public async Task<ServiceResult<PagedResult<TaskResponseDto>>> GetPagedAsync(
+        string userId,
         string? estado,
         string? responsable,
         int page,
@@ -28,7 +29,7 @@ public class TaskService(ITaskRepository repository, IUnitOfWork unitOfWork)
             status = parsed;
         }
 
-        var (items, totalItems) = await repository.GetPagedAsync(status, responsable, page, pageSize, cancellationToken);
+        var (items, totalItems) = await repository.GetPagedAsync(userId, status, responsable, page, pageSize, cancellationToken);
 
         var result = new PagedResult<TaskResponseDto>
         {
@@ -42,16 +43,16 @@ public class TaskService(ITaskRepository repository, IUnitOfWork unitOfWork)
         return ServiceResult<PagedResult<TaskResponseDto>>.Success(result);
     }
 
-    public async Task<ServiceResult<TaskResponseDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<TaskResponseDto>> GetByIdAsync(int id, string userId, CancellationToken cancellationToken = default)
     {
-        var task = await repository.GetByIdAsync(id, cancellationToken);
+        var task = await repository.GetByIdForUserAsync(id, userId, cancellationToken);
         if (task is null)
             return NotFound(id);
 
         return ServiceResult<TaskResponseDto>.Success(ToResponse(task));
     }
 
-    public async Task<TaskResponseDto> CreateAsync(TaskCreateDto dto, CancellationToken cancellationToken = default)
+    public async Task<TaskResponseDto> CreateAsync(TaskCreateDto dto, string userId, CancellationToken cancellationToken = default)
     {
         var task = new TaskItem
         {
@@ -59,7 +60,8 @@ public class TaskService(ITaskRepository repository, IUnitOfWork unitOfWork)
             Descripcion = dto.Descripcion?.Trim(),
             Estado = dto.Estado!.Value,
             Responsable = dto.Responsable.Trim(),
-            FechaLimite = dto.FechaLimite!.Value
+            FechaLimite = dto.FechaLimite!.Value,
+            UserId = userId
         };
 
         await repository.AddAsync(task, cancellationToken);
@@ -68,9 +70,9 @@ public class TaskService(ITaskRepository repository, IUnitOfWork unitOfWork)
         return ToResponse(task);
     }
 
-    public async Task<ServiceResult<TaskResponseDto>> UpdateAsync(int id, TaskUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<TaskResponseDto>> UpdateAsync(int id, TaskUpdateDto dto, string userId, CancellationToken cancellationToken = default)
     {
-        var task = await repository.GetByIdAsync(id, cancellationToken);
+        var task = await repository.GetByIdForUserAsync(id, userId, cancellationToken);
         if (task is null)
             return NotFound(id);
 
@@ -85,9 +87,9 @@ public class TaskService(ITaskRepository repository, IUnitOfWork unitOfWork)
         return ServiceResult<TaskResponseDto>.Success(ToResponse(task));
     }
 
-    public async Task<ServiceResult<bool>> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<bool>> DeleteAsync(int id, string userId, CancellationToken cancellationToken = default)
     {
-        var task = await repository.GetByIdAsync(id, cancellationToken);
+        var task = await repository.GetByIdForUserAsync(id, userId, cancellationToken);
         if (task is null)
             return ServiceResult<bool>.NotFound($"No existe la tarea con id {id}.");
 

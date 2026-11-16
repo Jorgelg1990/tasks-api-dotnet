@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TasksApi.Application.Common;
 using TasksApi.Application.Tasks;
@@ -7,6 +9,7 @@ namespace TasksApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class TasksController(TaskService tasks) : ControllerBase
 {
     [HttpGet]
@@ -17,7 +20,10 @@ public class TasksController(TaskService tasks) : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var result = await tasks.GetPagedAsync(estado, responsable, page, pageSize, cancellationToken);
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var result = await tasks.GetPagedAsync(userId, estado, responsable, page, pageSize, cancellationToken);
         if (result.Kind != ResultKind.Success)
             return ToProblem(result.Kind, result.Message);
 
@@ -27,7 +33,10 @@ public class TasksController(TaskService tasks) : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TaskResponseDto>> GetTask(int id, CancellationToken cancellationToken = default)
     {
-        var result = await tasks.GetByIdAsync(id, cancellationToken);
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var result = await tasks.GetByIdAsync(id, userId, cancellationToken);
         if (result.Kind != ResultKind.Success)
             return ToProblem(result.Kind, result.Message);
 
@@ -37,14 +46,20 @@ public class TasksController(TaskService tasks) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TaskResponseDto>> CreateTask([FromBody] TaskCreateDto dto, CancellationToken cancellationToken = default)
     {
-        var response = await tasks.CreateAsync(dto, cancellationToken);
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var response = await tasks.CreateAsync(dto, userId, cancellationToken);
         return CreatedAtAction(nameof(GetTask), new { id = response.Id }, response);
     }
 
     [HttpPut("{id:int}")]
     public async Task<ActionResult<TaskResponseDto>> UpdateTask(int id, [FromBody] TaskUpdateDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await tasks.UpdateAsync(id, dto, cancellationToken);
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var result = await tasks.UpdateAsync(id, dto, userId, cancellationToken);
         if (result.Kind != ResultKind.Success)
             return ToProblem(result.Kind, result.Message);
 
@@ -54,12 +69,18 @@ public class TasksController(TaskService tasks) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteTask(int id, CancellationToken cancellationToken = default)
     {
-        var result = await tasks.DeleteAsync(id, cancellationToken);
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var result = await tasks.DeleteAsync(id, userId, cancellationToken);
         if (result.Kind != ResultKind.Success)
             return ToProblem(result.Kind, result.Message);
 
         return NoContent();
     }
+
+    private string? GetUserId() =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue("sub");
 
     private ObjectResult ToProblem(ResultKind kind, string? message) => kind switch
     {

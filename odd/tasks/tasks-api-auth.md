@@ -31,7 +31,7 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 | T7 | S8, S10 | inline | completada | commit de T7: Identity, RefreshToken, TaskItem.UserId y migración AddIdentityAndRefreshTokens; 4/4 tests existentes en verde |
 | T8 | S8, S11 | inline | completada | commit T8: JWT access + refresh emisión inicial, /register, /login, validación estricta, rate limiting auth, usuario demo dev; 4/4 tests existentes en verde |
 | T9 | S8, S11 | inline (riesgo alto; verificación independiente en T13) | completada | commit T9: /refresh con rotación y detección de reutilización, /logout; 4/4 tests existentes en verde |
-| T10 | S10 | inline | pendiente | — |
+| T10 | S10 | inline | completada | commit T10: [Authorize] en /api/tasks, UserId desde token, filtro por usuario y 404 en acceso ajeno; 4 tests existentes adaptados y en verde |
 | T11 | S9 | inline | pendiente | — |
 | T12 | S12 | inline | pendiente | — |
 | T13 | S13 | inline + verificador independiente (riesgo alto) | pendiente | — |
@@ -46,3 +46,4 @@ Rama: `feat/tasks-api`. Estrategia de entrega: `ask-on-risk`. Test runner: `dotn
 - **L5 (T7):** Se agregó `ApplicationUser`, `RefreshToken` y `TaskItem.UserId` (nullable hasta T10 para no romper el contrato actual) con migración `AddIdentityAndRefreshTokens`. Se añadieron paquetes de Identity/JWT Bearer en Infrastructure; los 4 tests existentes siguen pasando.
 - **L6 (T8):** Se implementaron `/api/auth/register` y `/api/auth/login` con JWT (issuer/audience/lifetime/firma/ClockSkew 30s) y emisión de refresh token inicial; rate limiting en endpoints de auth y seed de usuario demo en Development. Swashbuckle se actualizó a 10.1.7 por compatibilidad con .NET 10/OpenAPI 2.x (la 7.2.0 rompía los tests). Los endpoints de tareas siguen sin `[Authorize]` hasta T10.
 - **L7 (T9):** Se agregaron `/api/auth/refresh` (rotación: revoca el usado, emite nuevo par) y `/api/auth/logout`. Si se reutiliza un refresh revocado se revocan todos los tokens del usuario. Hash SHA-256 en base. T9 se implementó inline con verificación independiente diferida a T13.
+- **L8 (T10):** `/api/tasks` requiere JWT; `UserId` se toma del claim del token y las consultas se filtran por usuario. Acceso a tarea ajena devuelve 404. Se adaptaron los 4 tests existentes para autenticarse (registro/login por test). Prueba específica de aislamiento A/B pendiente para T13. Tests: 4/4.
